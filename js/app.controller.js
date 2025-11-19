@@ -44,7 +44,7 @@ function renderLocs(locs) {
       const distance = utilService.getDistance(gUserPos, currLoc, 'K') + ' KM'
       console.log('distance:', distance)
       const className = loc.id === selectedLocId ? 'active' : ''
-      console.log('distance:', distance)
+
       return `
         <li class="loc ${className}" data-id="${loc.id}">
             <h4>  
@@ -293,12 +293,17 @@ function renderLocStats() {
   locService.getLocCountByRateMap().then(stats => {
     handleStats(stats, 'loc-stats-rate')
   })
+
+  locService.getLocCountByUpdate().then(stats => {
+    handleStats(stats, 'loc-stats-update')
+  })
 }
 
 function handleStats(stats, selector) {
   // stats = { low: 37, medium: 11, high: 100, total: 148 }
   // stats = { low: 5, medium: 5, high: 5, baba: 55, mama: 30, total: 100 }
   const labels = cleanStats(stats)
+  console.log('labels:', labels)
   const colors = utilService.getColors()
 
   var sumPercent = 0
