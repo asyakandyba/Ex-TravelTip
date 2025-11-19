@@ -16,6 +16,7 @@ window.app = {
   onShareLoc,
   onSetSortBy,
   onSetFilterBy,
+  onSaveLocation,
 }
 
 let gUserPos = ''
@@ -42,7 +43,6 @@ function renderLocs(locs) {
     .map(loc => {
       const currLoc = { lat: loc.geo.lat, lng: loc.geo.lng }
       const distance = utilService.getDistance(gUserPos, currLoc, 'K') + ' KM'
-      console.log('distance:', distance)
       const className = loc.id === selectedLocId ? 'active' : ''
 
       return `
@@ -117,24 +117,76 @@ function onSearchAddress(ev) {
 }
 
 function onAddLoc(geo) {
-  const locName = prompt('Loc name', geo.address || 'Just a place')
-  if (!locName) return
+  ShowDialog('Location Details?', 'add', geo)
+}
 
-  const loc = {
-    name: locName,
-    rate: +prompt(`Rate (1-5)`, '3'),
-    geo,
+function ShowDialog(msg, state, data) {
+  const elDialog = document.querySelector('.dialog-question')
+  elDialog.show()
+  const elQuestion = document.querySelector('.question')
+  elQuestion.innerText = msg
+
+  if (state === 'add') {
+    const geo = data
+    document.querySelector('.loc-input').hidden = false
+    const elLoc = document.querySelector('.loc-input')
+    elLoc.value = geo.address
+    const elRate = document.querySelector('.rate-input')
+    elRate.value = '3'
+
+    elDialog.dataset.geo = JSON.stringify(geo)
+  } else {
+    const id = data
+    document.querySelector('.loc-input').hidden = true
+
+    elDialog.dataset.id = id
   }
+}
+
+function onSaveLocation(ev) {
+  ev.preventDefault()
+  document.querySelector('.dialog-question').close()
+  const locInput = ev.target.querySelector('.loc-input').value
+  const rateInput = ev.target.querySelector('.rate-input').value
+  const locDetails = { loc: locInput, rate: rateInput }
+
+  const elDialog = document.querySelector('.dialog-question')
+
+  let geo
+  let id
+  if (elDialog.dataset.geo) geo = JSON.parse(elDialog.dataset.geo)
+  if (elDialog.dataset.id) id = elDialog.dataset.id
+
+  if (!locDetails) return
+
+  if (!geo) {
+    locService.getById(id).then(loc => {
+      const rate = rateInput
+      if (rate && rate !== loc.rate) {
+        loc.rate = rate
+        saveLoc(loc)
+      }
+    })
+  } else {
+    const loc = {
+      name: locDetails.loc,
+      rate: locDetails.rate,
+      geo,
+    }
+    saveLoc(loc)
+  }
+}
+
+function saveLoc(loc) {
   locService
     .save(loc)
     .then(savedLoc => {
-      flashMsg(`Added Location (id: ${savedLoc.id})`)
-      utilService.updateQueryParams({ locId: savedLoc.id })
+      flashMsg(`Rate was set to: ${savedLoc.rate}`)
       loadAndRenderLocs()
     })
     .catch(err => {
       console.error('OOPs:', err)
-      flashMsg('Cannot add location')
+      flashMsg('Cannot update location')
     })
 }
 
@@ -157,7 +209,6 @@ function onPanToUserPos() {
       loadAndRenderLocs()
       flashMsg(`You are at Latitude: ${latLng.lat} Longitude: ${latLng.lng}`)
       gUserPos = latLng
-      console.log('latLng:', latLng)
     })
     .catch(err => {
       console.error('OOPs:', err)
@@ -166,22 +217,24 @@ function onPanToUserPos() {
 }
 
 function onUpdateLoc(locId) {
-  locService.getById(locId).then(loc => {
-    const rate = +prompt('New rate?', loc.rate)
-    if (rate && rate !== loc.rate) {
-      loc.rate = rate
-      locService
-        .save(loc)
-        .then(savedLoc => {
-          flashMsg(`Rate was set to: ${savedLoc.rate}`)
-          loadAndRenderLocs()
-        })
-        .catch(err => {
-          console.error('OOPs:', err)
-          flashMsg('Cannot update location')
-        })
-    }
-  })
+  ShowDialog('Location rate?', 'update', locId)
+
+  //   locService.getById(locId).then(loc => {
+  //     const rate = +prompt('New rate?', loc.rate)
+  //     if (rate && rate !== loc.rate) {
+  //       loc.rate = rate
+  //       locService
+  //         .save(loc)
+  //         .then(savedLoc => {
+  //           flashMsg(`Rate was set to: ${savedLoc.rate}`)
+  //           loadAndRenderLocs()
+  //         })
+  //         .catch(err => {
+  //           console.error('OOPs:', err)
+  //           flashMsg('Cannot update location')
+  //         })
+  //     }
+  //   })
 }
 
 function onSelectLoc(locId) {
@@ -303,7 +356,6 @@ function handleStats(stats, selector) {
   // stats = { low: 37, medium: 11, high: 100, total: 148 }
   // stats = { low: 5, medium: 5, high: 5, baba: 55, mama: 30, total: 100 }
   const labels = cleanStats(stats)
-  console.log('labels:', labels)
   const colors = utilService.getColors()
 
   var sumPercent = 0

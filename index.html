@@ -97,6 +97,17 @@
     </main>
     <pre class="debug" hidden></pre>
     <div class="user-msg"></div>
+
+    <dialog class="dialog-question">
+      <h2 class="question"></h2>
+      <form onsubmit="app.onSaveLocation(event)">
+        <input class="loc-input" type="text" />
+        <input class="rate-input" type="text" />
+        <button>Ok</button>
+        <button type="button" class="cancel-btn">Cancel</button>
+      </form>
+    </dialog>
+
     <script type="module" src="js/app.controller.js"></script>
   </body>
 </html>
