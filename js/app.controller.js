@@ -41,8 +41,9 @@ function renderLocs(locs) {
   var strHTML = locs
     .map(loc => {
       const currLoc = { lat: loc.geo.lat, lng: loc.geo.lng }
+      const distance = utilService.getDistance(gUserPos, currLoc, 'K') + ' KM'
+      console.log('distance:', distance)
       const className = loc.id === selectedLocId ? 'active' : ''
-      const distance = utilService.getDistance(gUserPos, currLoc, 'K')
       console.log('distance:', distance)
       return `
         <li class="loc ${className}" data-id="${loc.id}">
@@ -194,6 +195,8 @@ function onSelectLoc(locId) {
 }
 
 function displayLoc(loc) {
+  const currLoc = { lat: loc.geo.lat, lng: loc.geo.lng }
+  const distance = utilService.getDistance(gUserPos, currLoc, 'K')
   document.querySelector('.loc.active')?.classList?.remove('active')
   document.querySelector(`.loc[data-id="${loc.id}"]`).classList.add('active')
 
@@ -202,7 +205,8 @@ function displayLoc(loc) {
 
   const el = document.querySelector('.selected-loc')
   el.querySelector('.loc-name').innerText = loc.name
-  el.querySelector('.loc-address').innerText = loc.geo.address
+  el.querySelector('.loc-address').innerText =
+    utilService.getDistance(gUserPos, currLoc, 'K') + ' KM'
   el.querySelector('.loc-rate').innerHTML = '★'.repeat(loc.rate)
   el.querySelector('[name=loc-copier]').value = window.location
   el.classList.add('show')
