@@ -16,6 +16,7 @@ window.app = {
     onShareLoc,
     onSetSortBy,
     onSetFilterBy,
+    onSetColor,
 }
 
 function onInit() {
@@ -314,4 +315,16 @@ function cleanStats(stats) {
         return acc
     }, [])
     return cleanedStats
+}
+
+function onSetColor(color) {
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+
+    const root = document.querySelector(':root').style
+    
+    root.setProperty('--bg1', `rgba(${r}, ${g}, ${b}, 0.2)`)
+    root.setProperty('--bg2', `rgba(${r}, ${g}, ${b}, 0.5)`)
+    root.setProperty('--bg3', `rgba(${r}, ${g}, ${b}, 0.9)`)
 }
