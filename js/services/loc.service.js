@@ -107,7 +107,6 @@ function getLocCountByRateMap() {
 
 function getLocCountByUpdate() {
   return storageService.query(DB_KEY).then(locs => {
-    console.log('locs:', locs)
     const locCountByRateMap = locs.reduce(
       (map, loc) => {
         const isToday =

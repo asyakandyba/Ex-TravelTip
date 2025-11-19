@@ -16,7 +16,8 @@ window.app = {
   onShareLoc,
   onSetSortBy,
   onSetFilterBy,
-  onSaveLocation,
+  onSaveLoc,
+  onCloseModal,
   onSetColor,
 }
 
@@ -55,22 +56,18 @@ function renderLocs(locs) {
             </h4>
             <p class="muted">
                 Created: ${utilService.elapsedTime(loc.createdAt)}
-                ${
-                  loc.createdAt !== loc.updatedAt
-                    ? ` | Updated: ${utilService.elapsedTime(loc.updatedAt)}`
-                    : ''
-                }
+                ${loc.createdAt !== loc.updatedAt
+          ? ` | Updated: ${utilService.elapsedTime(loc.updatedAt)}`
+          : ''
+        }
             </p>
             <div class="loc-btns">     
-               <button title="Delete" onclick="app.onRemoveLoc('${
-                 loc.id
-               }')">🗑️</button>
-               <button title="Edit" onclick="app.onUpdateLoc('${
-                 loc.id
-               }')">✏️</button>
-               <button title="Select" onclick="app.onSelectLoc('${
-                 loc.id
-               }')">🗺️</button>
+               <button title="Delete" onclick="app.onRemoveLoc('${loc.id
+        }')">🗑️</button>
+               <button title="Edit" onclick="app.onUpdateLoc('${loc.id
+        }')">✏️</button>
+               <button title="Select" onclick="app.onSelectLoc('${loc.id
+        }')">🗺️</button>
             </div>     
         </li>`
     })
@@ -121,6 +118,10 @@ function onAddLoc(geo) {
   ShowDialog('Location Details?', 'add', geo)
 }
 
+function onUpdateLoc(locId) {
+  ShowDialog('New rate?', 'update', locId)
+}
+
 function ShowDialog(msg, state, data) {
   const elDialog = document.querySelector('.dialog-question')
   elDialog.show()
@@ -144,24 +145,22 @@ function ShowDialog(msg, state, data) {
   }
 }
 
-function onSaveLocation(ev) {
-  ev.preventDefault()
+function onCloseModal() {
   document.querySelector('.dialog-question').close()
+}
+
+function onSaveLoc(ev) {
+  ev.preventDefault()
+  onCloseModal()
+
   const locInput = ev.target.querySelector('.loc-input').value
   const rateInput = ev.target.querySelector('.rate-input').value
-  const locDetails = { loc: locInput, rate: rateInput }
+  if (!locInput || !rateInput) return
 
   const elDialog = document.querySelector('.dialog-question')
-
-  let geo
-  let id
-  if (elDialog.dataset.geo) geo = JSON.parse(elDialog.dataset.geo)
-  if (elDialog.dataset.id) id = elDialog.dataset.id
-
-  if (!locDetails) return
-
-  if (!geo) {
-    locService.getById(id).then(loc => {
+  if (elDialog.dataset.id) {
+    const id = elDialog.dataset.id
+    loc = locService.getById(id).then(loc => {
       const rate = rateInput
       if (rate && rate !== loc.rate) {
         loc.rate = rate
@@ -169,9 +168,10 @@ function onSaveLocation(ev) {
       }
     })
   } else {
+    const geo = JSON.parse(elDialog.dataset.geo)
     const loc = {
-      name: locDetails.loc,
-      rate: locDetails.rate,
+      name: locInput,
+      rate: rateInput,
       geo,
     }
     saveLoc(loc)
@@ -217,27 +217,6 @@ function onPanToUserPos() {
     })
 }
 
-function onUpdateLoc(locId) {
-  ShowDialog('Location rate?', 'update', locId)
-
-  //   locService.getById(locId).then(loc => {
-  //     const rate = +prompt('New rate?', loc.rate)
-  //     if (rate && rate !== loc.rate) {
-  //       loc.rate = rate
-  //       locService
-  //         .save(loc)
-  //         .then(savedLoc => {
-  //           flashMsg(`Rate was set to: ${savedLoc.rate}`)
-  //           loadAndRenderLocs()
-  //         })
-  //         .catch(err => {
-  //           console.error('OOPs:', err)
-  //           flashMsg('Cannot update location')
-  //         })
-  //     }
-  //   })
-}
-
 function onSelectLoc(locId) {
   return locService
     .getById(locId)
@@ -250,7 +229,6 @@ function onSelectLoc(locId) {
 
 function displayLoc(loc) {
   const currLoc = { lat: loc.geo.lat, lng: loc.geo.lng }
-  const distance = utilService.getDistance(gUserPos, currLoc, 'K')
   document.querySelector('.loc.active')?.classList?.remove('active')
   document.querySelector(`.loc[data-id="${loc.id}"]`).classList.add('active')
 

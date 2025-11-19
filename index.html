@@ -101,11 +101,11 @@
 
     <dialog class="dialog-question">
       <h2 class="question"></h2>
-      <form onsubmit="app.onSaveLocation(event)">
+      <form onsubmit="app.onSaveLoc(event)">
         <input class="loc-input" type="text" />
         <input class="rate-input" type="text" />
         <button>Ok</button>
-        <button type="button" class="cancel-btn">Cancel</button>
+        <button type="button" class="cancel-btn" onclick="app.onCloseModal()">Cancel</button>
       </form>
     </dialog>
 
